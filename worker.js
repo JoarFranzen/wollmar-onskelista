@@ -78,14 +78,16 @@ async function googleAccessToken(env) {
   cachedGoogleToken=data.access_token; cachedGoogleTokenExpiry=Date.now()+(Number(data.expires_in)||3600)*1000;
   return cachedGoogleToken;
 }
+function toFirestoreValue(value) {
+  if(value===null || value===undefined) return {nullValue:null};
+  if(typeof value==='boolean') return {booleanValue:value};
+  if(typeof value==='number') return {doubleValue:value};
+  if(Array.isArray(value)) return {arrayValue:{values:value.map(toFirestoreValue)}};
+  return {stringValue:String(value)};
+}
 function toFirestoreFields(data) {
   const fields={};
-  for(const [key,value] of Object.entries(data)) {
-    if(value===null || value===undefined) fields[key]={nullValue:null};
-    else if(typeof value==='boolean') fields[key]={booleanValue:value};
-    else if(typeof value==='number') fields[key]={doubleValue:value};
-    else fields[key]={stringValue:String(value)};
-  }
+  for(const [key,value] of Object.entries(data)) fields[key]=toFirestoreValue(value);
   return fields;
 }
 async function firestoreRequest(env, path, options={}) {
@@ -105,6 +107,11 @@ function validateWish(body) {
   for(const field of fields) data[field]=typeof body[field]==='string'?body[field].trim():'';
   if(!data.title || data.title.length>100) throw new Error('Titeln måste vara mellan 1 och 100 tecken.');
   if(data.description.length>500) throw new Error('Beskrivningen får vara högst 500 tecken.');
+  data.items=Array.isArray(body.items)?[...new Set(body.items.filter(x=>typeof x==='string').map(x=>x.trim()).filter(Boolean))].slice(0,30):[];
+  data.reservedItems=Array.isArray(body.reservedItems)?[...new Set(body.reservedItems.filter(x=>typeof x==='string').map(x=>x.trim()).filter(Boolean))].slice(0,30):[];
+  if(data.items.some(x=>x.length>100)) throw new Error('Varje val får vara högst 100 tecken.');
+  if(data.items.length>30) throw new Error('Max 30 val per önskning.');
+  if(data.reservedItems.some(x=>!data.items.includes(x))) data.reservedItems=data.reservedItems.filter(x=>data.items.includes(x));
   for(const key of ['link','image']) {
     if(data[key]) {
       let u; try {u=new URL(data[key]);} catch {throw new Error('Länk eller bildadress är ogiltig.');}
@@ -135,6 +142,20 @@ async function handle(request, env) {
       return json({token:await issueSession(env)},200,origin);
     }
     if(!await validSession(request,env)) return json({error:'Sessionen har gått ut. Logga in igen.'},401,origin);
+    if(url.pathname==='/categories' && request.method==='PUT') {
+      const body=await request.json().catch(()=>({}));
+      const categories=Array.isArray(body.categories)?[...new Set(body.categories.filter(x=>typeof x==='string').map(x=>x.trim()).filter(Boolean))].slice(0,50):[];
+      if(!categories.length || categories.some(x=>x.length>40)) return json({error:'Lägg till minst en kategori (max 40 tecken per kategori).'},400,origin);
+      const fields=toFirestoreFields({isSettings:true,categories});
+      const path='/wishes/__settings_categories__';
+      try {
+        await firestoreRequest(env,path+'?updateMask.fieldPaths=isSettings&updateMask.fieldPaths=categories',{method:'PATCH',body:JSON.stringify({fields})});
+      } catch(e) {
+        if(!String(e.message).includes('404')) throw e;
+        await firestoreRequest(env,'/wishes?documentId=__settings_categories__',{method:'POST',body:JSON.stringify({fields})});
+      }
+      return json({ok:true,categories},200,origin);
+    }
     if(url.pathname==='/wishes' && request.method==='POST') {
       const data=validateWish(await request.json());
       data.reserved=false;
