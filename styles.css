@@ -134,3 +134,11 @@ footer span{color:#d7a0cb}
 @media(max-width:850px){.hero{min-height:0;gap:0}.hero-art{flex-basis:300px;width:300px;scale:.82;transform-origin:center right;margin-left:-20px}.hero-copy{max-width:540px}.party-scene{height:650px}}
 @media(max-width:600px){.topbar{height:67px;padding:0 18px}.brand{font-size:13px}.brand-mark{width:30px;height:30px}.hero{display:block;padding:35px 0 25px;min-height:0}.hero-copy{max-width:none}.eyebrow{font-size:9px}h1{font-size:clamp(43px,12vw,59px);margin:17px 0 14px}.intro{font-size:14px;line-height:1.75}.party-invite{font-size:14px}.hero-art{width:100%;height:230px;scale:.76;transform:none;margin:-2px 0 -4px;transform-origin:top center}.art-planet{left:calc(50% - 105px);top:12px}.orbit-one{left:calc(50% - 160px);top:53px}.orbit-two{left:calc(50% - 137px);top:30px}.rocket-wrap{left:calc(50% - 82px);top:24px}.star-a{left:calc(50% - 140px);top:5px}.star-b{right:calc(50% - 155px);top:24px}.star-c{left:calc(50% - 142px);bottom:3px}.star-d{right:calc(50% - 145px);bottom:0}.art-caption{right:calc(50% - 165px);bottom:0}.list-section{padding:12px 0 50px}.section-head{flex-direction:row;align-items:center}.section-head h2{font-size:24px}.wish-grid{grid-template-columns:1fr;gap:14px}.wish-image{max-height:220px}.wish-content{padding:16px}.party-scene{height:820px}.sky-star-b{top:700px;left:10%}.sky-star-c{top:620px;right:5%}.planet-one{top:670px}.cloud-one{top:750px}}
 @media(prefers-reduced-motion:reduce){.rocket-wrap,.art-star,.sky-star{animation:none!important}}
+
+/* Admin reservation controls */
+.manage-row{align-items:flex-start;flex-wrap:wrap}
+.manage-row>div:first-child{flex:1;min-width:160px}
+.manage-row .admin-options{color:#8a7899;line-height:1.5;max-width:320px}
+.manage-actions{display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end}
+.manage-row button[data-unreserve]{color:#a24e77;font-weight:700}
+@media(max-width:600px){.manage-actions{justify-content:flex-start;width:100%}}
