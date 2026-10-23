@@ -1,12 +1,12 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getFirestore, collection, doc, onSnapshot, query, orderBy, runTransaction, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { getFirestore, collection, doc, getDoc, onSnapshot, query, orderBy, runTransaction, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { firebaseConfig, adminApiUrl } from './config.js';
 
 const $ = id => document.getElementById(id);
 const dialog = $('admin-dialog'), grid = $('wish-grid'), status = $('status');
 const firebaseConfigured = !Object.values(firebaseConfig).some(v => String(v).startsWith('PASTE_'));
 const adminConfigured = firebaseConfigured && !String(adminApiUrl).startsWith('PASTE_');
-let db, wishes = [], adminToken = sessionStorage.getItem('wollmar-admin-token') || '';
+let db, wishes = [], categories = ['Lek & bygg','Böcker & pyssel','Ute & äventyr','Övrigt'], adminToken = sessionStorage.getItem('wollmar-admin-token') || '';
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(m) { const e=$('toast'); e.textContent=m; e.classList.add('show'); setTimeout(()=>e.classList.remove('show'),2600); }
 function showError(m) { $('admin-error').textContent=m; $('admin-error').hidden=false; }
@@ -21,8 +21,24 @@ function render() {
     const picture=img?'<img src="'+esc(img)+'" alt="" loading="lazy" onerror="this.remove()">':'<span class="placeholder" aria-hidden="true">'+['✿','✦','♡','✳'][i%4]+'</span>';
     return '<article class="wish-card" style="animation-delay:'+Math.min(i*55,350)+'ms"><div class="wish-image">'+picture+'</div><div class="wish-content"><span class="category">'+esc(w.category||'Önskning')+'</span><h3>'+esc(w.title)+'</h3><p class="wish-description">'+esc(w.description||'')+'</p><div class="wish-bottom"><span class="price">'+esc(w.price||'')+'</span><div class="wish-actions">'+(link?'<a class="gift-link" href="'+esc(link)+'" target="_blank" rel="noopener noreferrer">Se present ↗</a>':'')+(w.reserved?'<span class="reserved-label">Någon har paxat ♡</span>':'<button class="reserve-button" data-reserve="'+esc(w.id)+'">Jag köper den!</button>')+'</div></div></div></article>';
   }).join('');
-  grid.querySelectorAll('[data-reserve]').forEach(b=>b.addEventListener('click',()=>reserve(b.dataset.reserve,b)));
+  grid.querySelectorAll('[data-reserve]').forEach(b=>b.addEventListener('click',()=>reserve(b.dataset.reserve,b)));\n  grid.querySelectorAll('[data-reserve-items]').forEach(b=>b.addEventListener('click',()=>{const card=b.closest('.wish-card');const selected=[...card.querySelectorAll('.item-choice input:checked:not(:disabled)')].map(x=>x.value);reserveItems(b.dataset.reserveItems,selected,b);}));
   if (isAdmin()) renderManage();
+}
+async function reserveItems(id, selected, b) {
+  if(!selected.length){toast('Välj minst en sak.');return;}
+  b.disabled=true;
+  try {
+    await runTransaction(db, async tx => {
+      const ref=doc(db,'wishes',id), snap=await tx.get(ref);
+      if(!snap.exists()) throw Error('gone');
+      const data=snap.data(), items=Array.isArray(data.items)?data.items:[], reserved=Array.isArray(data.reservedItems)?data.reservedItems:[];
+      if(selected.some(item=>!items.includes(item)||reserved.includes(item))) throw Error('reserved');
+      tx.update(ref,{reservedItems:[...reserved,...selected]});
+    });
+    toast('Valet är paxat.');
+  } catch(e) {
+    toast(e.message==='reserved'?'Någon hann före. Uppdatera listan och välj igen.':'Det gick inte att paxa just nu. Prova igen.');
+  } finally { b.disabled=false; }
 }
 async function reserve(id,b) {
   b.disabled=true; b.textContent='Paxar…';
@@ -55,15 +71,33 @@ function renderManage() {
 }
 function editWish(id) {
   const w=wishes.find(x=>x.id===id); if(!w)return;
-  $('wish-id').value=w.id; $('wish-title').value=w.title||''; $('wish-description').value=w.description||'';
+  $('wish-id').value=w.id; $('wish-title').value=w.title||''; $('wish-description').value=w.description||''; $('wish-items').value=Array.isArray(w.items)?w.items.join('\\n'):'';
   $('wish-link').value=w.link||''; $('wish-image').value=w.image||''; $('wish-price').value=w.price||'';
-  $('wish-category').value=w.category||'Övrigt'; $('wish-form').scrollIntoView({behavior:'smooth',block:'start'});
+  populateCategorySelect(); $('wish-category').value=w.category||categories[0]||''; $('wish-form').scrollIntoView({behavior:'smooth',block:'start'});
 }
-function clearForm() { $('wish-form').reset(); $('wish-id').value=''; }
+function clearForm() { $('wish-form').reset(); $('wish-id').value=''; populateCategorySelect(); }
+function populateCategorySelect() {
+  const select=$('wish-category'), current=select.value;
+  select.innerHTML=categories.map(c=>'<option value="'+esc(c)+'">'+esc(c)+'</option>').join('');
+  if(categories.includes(current)) select.value=current;
+}
+function renderCategoryManager() {
+  populateCategorySelect();
+  $('category-list').innerHTML=categories.map((c,i)=>'<div class="category-row"><span>'+esc(c)+'</span><button type="button" data-remove-category="'+i+'" aria-label="Ta bort '+esc(c)+'">Ta bort</button></div>').join('');
+  $('category-list').querySelectorAll('[data-remove-category]').forEach(b=>b.onclick=()=>saveCategories(categories.filter((_,i)=>i!==Number(b.dataset.removeCategory))));
+}
+async function saveCategories(next) {
+  const clean=[...new Set(next.map(c=>String(c).trim()).filter(Boolean))];
+  if(!clean.length){toast('Minst en kategori behövs.');return;}
+  try {
+    await adminRequest('/categories','PUT',{categories:clean});
+    categories=clean; renderCategoryManager(); toast('Kategorier sparade.');
+  } catch(e) { showError(e.message); }
+}
 function updateAdminUI() {
   $('admin-auth').hidden=isAdmin();
   $('admin-panel').hidden=!isAdmin();
-  if(isAdmin()) { $('admin-welcome').textContent='Inloggad i vuxenläget'; renderManage(); }
+  if(isAdmin()) { $('admin-welcome').textContent=''; renderManage(); renderCategoryManager(); }
 }
 async function removeWish(id) {
   if(!confirm('Ta bort önskningen?'))return;
@@ -83,7 +117,7 @@ $('logout-button').onclick=()=>{adminToken='';sessionStorage.removeItem('wollmar
 $('cancel-edit').onclick=clearForm;
 $('wish-form').onsubmit=async e=>{
   e.preventDefault(); if(!isAdmin())return showError('Logga in i vuxenläget först.');
-  const data={title:$('wish-title').value.trim(),description:$('wish-description').value.trim(),link:safeUrl($('wish-link').value),image:safeUrl($('wish-image').value),price:$('wish-price').value.trim(),category:$('wish-category').value};
+  const data={title:$('wish-title').value.trim(),description:$('wish-description').value.trim(),items:$('wish-items').value.split('\\n').map(s=>s.trim()).filter(Boolean).filter((s,i,a)=>a.indexOf(s)===i),link:safeUrl($('wish-link').value),image:safeUrl($('wish-image').value),price:$('wish-price').value.trim(),category:$('wish-category').value};
   if(!data.title)return;
   try {
     const id=$('wish-id').value;
@@ -92,6 +126,7 @@ $('wish-form').onsubmit=async e=>{
     clearForm(); toast('Önskningen sparad ♡');
   } catch(err) { showError(err.message); }
 };
+$('add-category').onclick=()=>{const value=$('new-category').value.trim();if(!value)return;if(categories.some(c=>c.toLowerCase()===value.toLowerCase())){toast('Kategorin finns redan.');return;}$('new-category').value='';saveCategories([...categories,value]);};
 if(!firebaseConfigured) {
   status.textContent='Snart öppnar önskelistan! Firebase behöver konfigureras.';
   $('wish-count').textContent='Snart klart';
