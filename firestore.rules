@@ -1,25 +1,16 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function isAdmin() {
-      return request.auth != null
-        && request.auth.token.email != null
-        && request.auth.token.email.lower() == 'PASTE_YOUR_GOOGLE_EMAIL_HERE';
-    }
     match /wishes/{wishId} {
+      // The public can view the wishlist.
       allow read: if true;
-      allow create: if isAdmin()
-        && request.resource.data.keys().hasAll(['title', 'reserved', 'createdAt'])
-        && request.resource.data.title is string
-        && request.resource.data.title.size() > 0
-        && request.resource.data.title.size() <= 100
-        && request.resource.data.reserved == false;
-      allow delete: if isAdmin();
-      allow update: if isAdmin() || (
-        resource.data.reserved == false
+
+      // Guests may only reserve an unreserved wish. Admin writes go through the
+      // Cloudflare Worker using a service account and therefore bypass these rules.
+      allow create, delete: if false;
+      allow update: if resource.data.reserved == false
         && request.resource.data.reserved == true
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reserved', 'reservedAt'])
-      );
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reserved', 'reservedAt']);
     }
   }
 }
