@@ -6,27 +6,47 @@ const $ = id => document.getElementById(id);
 const dialog = $('admin-dialog'), grid = $('wish-grid'), status = $('status');
 const firebaseConfigured = !Object.values(firebaseConfig).some(v => String(v).startsWith('PASTE_'));
 const adminConfigured = firebaseConfigured && !String(adminApiUrl).startsWith('PASTE_');
-let db, wishes = [], categories = ['Lek & bygg','Böcker & pyssel','Ute & äventyr','Övrigt'], adminToken = sessionStorage.getItem('wollmar-admin-token') || '';
+const defaultCategories = ['Lek & bygg', 'Böcker & pyssel', 'Ute & äventyr', 'Övrigt'];
+let db, wishes = [], categories = [...defaultCategories], adminToken = sessionStorage.getItem('wollmar-admin-token') || '';
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function toast(m) { const e=$('toast'); e.textContent=m; e.classList.add('show'); setTimeout(()=>e.classList.remove('show'),2600); }
-function showError(m) { $('admin-error').textContent=m; $('admin-error').hidden=false; }
-function safeUrl(v) { try { const u=new URL(v); return ['https:','http:'].includes(u.protocol)?u.href:''; } catch { return ''; } }
+function toast(message) { const e=$('toast'); e.textContent=message; e.classList.add('show'); setTimeout(()=>e.classList.remove('show'),2600); }
+function showError(message) { $('admin-error').textContent=message; $('admin-error').hidden=false; }
+function safeUrl(value) { try { const u=new URL(value); return ['https:','http:'].includes(u.protocol)?u.href:''; } catch { return ''; } }
 function isAdmin() { return !!adminToken; }
+
 function render() {
   $('wish-count').textContent = wishes.length + (wishes.length===1?' önskning':' önskningar');
   status.hidden = wishes.length > 0;
-  if (!wishes.length) status.textContent = firebaseConfigured ? 'Listan är tom än så länge. Vi fyller på snart!' : 'Snart öppnar önskelistan! Firebase behöver konfigureras.';
-  grid.innerHTML = wishes.map((w,i) => {
+  if (!wishes.length) status.textContent = firebaseConfigured ? 'Inga önskningar ännu.' : 'Firebase behöver konfigureras.';
+  grid.innerHTML = wishes.map(w => {
     const img=safeUrl(w.image), link=safeUrl(w.link);
-    const picture=img?'<img src="'+esc(img)+'" alt="" loading="lazy" onerror="this.remove()">':'<span class="placeholder" aria-hidden="true">'+['✿','✦','♡','✳'][i%4]+'</span>';
-    return '<article class="wish-card" style="animation-delay:'+Math.min(i*55,350)+'ms"><div class="wish-image">'+picture+'</div><div class="wish-content"><span class="category">'+esc(w.category||'Önskning')+'</span><h3>'+esc(w.title)+'</h3><p class="wish-description">'+esc(w.description||'')+'</p><div class="wish-bottom"><span class="price">'+esc(w.price||'')+'</span><div class="wish-actions">'+(link?'<a class="gift-link" href="'+esc(link)+'" target="_blank" rel="noopener noreferrer">Se present ↗</a>':'')+(w.reserved?'<span class="reserved-label">Någon har paxat ♡</span>':'<button class="reserve-button" data-reserve="'+esc(w.id)+'">Jag köper den!</button>')+'</div></div></div></article>';
+    const items=Array.isArray(w.items)?w.items.filter(x=>typeof x==='string'&&x.trim()):[];
+    const reservedItems=Array.isArray(w.reservedItems)?w.reservedItems:[];
+    const picture=img?'<img src="'+esc(img)+'" alt="" loading="lazy" onerror="this.remove()">':'';
+    let choices='';
+    if(items.length) {
+      choices='<div class="item-picks">'+items.map(item=>{
+        const taken=reservedItems.includes(item);
+        return '<label class="item-choice'+(taken?' item-taken':'')+'"><input type="checkbox" value="'+esc(item)+'" '+(taken?'disabled':'')+'><span>'+esc(item)+'</span>'+(taken?'<small>Paxad</small>':'')+'</label>';
+      }).join('')+'<button class="reserve-button" data-reserve-items="'+esc(w.id)+'" '+(items.every(item=>reservedItems.includes(item))?'disabled':'')+'>Paxa valda</button></div>';
+    } else {
+      const taken=!!w.reserved || reservedItems.length>0;
+      choices=taken?'<span class="reserved-label">Paxad</span>':'<button class="reserve-button" data-reserve="'+esc(w.id)+'">Paxa presenten</button>';
+    }
+    return '<article class="wish-card"><div class="wish-image">'+picture+'</div><div class="wish-content"><span class="category">'+esc(w.category||'Övrigt')+'</span><h3>'+esc(w.title)+'</h3>'+(w.description?'<p class="wish-description">'+esc(w.description)+'</p>':'')+(w.price?'<div class="price">'+esc(w.price)+'</div>':'')+(link?'<a class="gift-link" href="'+esc(link)+'" target="_blank" rel="noopener noreferrer">Länk till present</a>':'')+choices+'</div></article>';
   }).join('');
-  grid.querySelectorAll('[data-reserve]').forEach(b=>b.addEventListener('click',()=>reserve(b.dataset.reserve,b)));\n  grid.querySelectorAll('[data-reserve-items]').forEach(b=>b.addEventListener('click',()=>{const card=b.closest('.wish-card');const selected=[...card.querySelectorAll('.item-choice input:checked:not(:disabled)')].map(x=>x.value);reserveItems(b.dataset.reserveItems,selected,b);}));
-  if (isAdmin()) renderManage();
+  grid.querySelectorAll('[data-reserve]').forEach(b=>b.addEventListener('click',()=>reserve(b.dataset.reserve,b)));
+  grid.querySelectorAll('[data-reserve-items]').forEach(b=>b.addEventListener('click',()=>{
+    const card=b.closest('.wish-card');
+    const selected=[...card.querySelectorAll('.item-choice input:checked:not(:disabled)')].map(input=>input.value);
+    reserveItems(b.dataset.reserveItems,selected,b);
+  }));
+  if(isAdmin()) renderManage();
 }
-async function reserveItems(id, selected, b) {
+
+async function reserveItems(id, selected, button) {
   if(!selected.length){toast('Välj minst en sak.');return;}
-  b.disabled=true;
+  button.disabled=true;
   try {
     await runTransaction(db, async tx => {
       const ref=doc(db,'wishes',id), snap=await tx.get(ref);
@@ -38,10 +58,11 @@ async function reserveItems(id, selected, b) {
     toast('Valet är paxat.');
   } catch(e) {
     toast(e.message==='reserved'?'Någon hann före. Uppdatera listan och välj igen.':'Det gick inte att paxa just nu. Prova igen.');
-  } finally { b.disabled=false; }
+  } finally { button.disabled=false; }
 }
-async function reserve(id,b) {
-  b.disabled=true; b.textContent='Paxar…';
+
+async function reserve(id, button) {
+  button.disabled=true; button.textContent='Paxar…';
   try {
     await runTransaction(db, async tx => {
       const ref=doc(db,'wishes',id), snap=await tx.get(ref);
@@ -49,31 +70,40 @@ async function reserve(id,b) {
       if(snap.data().reserved) throw Error('reserved');
       tx.update(ref,{reserved:true,reservedAt:serverTimestamp()});
     });
-    toast('Den är paxad! Tack för att du fixar en present ♡');
+    toast('Presenten är paxad.');
   } catch(e) {
-    toast(e.message==='reserved'?'Någon hann före, den är redan paxad.':'Det gick inte att reservera just nu. Prova igen.');
-  } finally { b.disabled=false; b.textContent='Jag köper den!'; }
+    toast(e.message==='reserved'?'Någon hann före, presenten är redan paxad.':'Det gick inte att paxa just nu. Prova igen.');
+  } finally { button.disabled=false; button.textContent='Paxa presenten'; }
 }
+
 async function adminRequest(path, method='GET', body) {
-  if (!adminConfigured) throw Error('Cloudflare Worker är inte inkopplad ännu.');
-  const res = await fetch(adminApiUrl.replace(/\/$/,'')+path, {
-    method, headers: {'Content-Type':'application/json', ...(adminToken?{Authorization:'Bearer '+adminToken}:{})},
+  if(!adminConfigured) throw Error('Adminservern är inte konfigurerad.');
+  const res=await fetch(adminApiUrl.replace(/\/$/,'')+path,{
+    method,headers:{'Content-Type':'application/json',...(adminToken?{Authorization:'Bearer '+adminToken}:{})},
     ...(body?{body:JSON.stringify(body)}:{})
   });
   const data=await res.json().catch(()=>({}));
-  if (!res.ok) throw Error(data.error || 'Något gick fel ('+res.status+').');
+  if(!res.ok) throw Error(data.error||'Något gick fel ('+res.status+').');
   return data;
 }
+
 function renderManage() {
-  $('manage-list').innerHTML=wishes.map(w=>'<div class="manage-row"><div><strong>'+esc(w.title)+'</strong><small>'+(w.reserved?'Reserverad':'Inte reserverad')+'</small></div><div><button data-edit="'+esc(w.id)+'">Ändra</button> <button data-delete="'+esc(w.id)+'">Ta bort</button></div></div>').join('');
+  $('manage-list').innerHTML=wishes.map(w=>'<div class="manage-row"><div><strong>'+esc(w.title)+'</strong><small>'+(w.items?.length?(w.items.length+' val'):(w.reserved?'Paxad':'Inte paxad'))+'</small></div><div><button data-edit="'+esc(w.id)+'">Ändra</button> <button data-delete="'+esc(w.id)+'">Ta bort</button></div></div>').join('');
   $('manage-list').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>editWish(b.dataset.edit));
   $('manage-list').querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>removeWish(b.dataset.delete));
 }
 function editWish(id) {
   const w=wishes.find(x=>x.id===id); if(!w)return;
-  $('wish-id').value=w.id; $('wish-title').value=w.title||''; $('wish-description').value=w.description||''; $('wish-items').value=Array.isArray(w.items)?w.items.join('\\n'):'';
-  $('wish-link').value=w.link||''; $('wish-image').value=w.image||''; $('wish-price').value=w.price||'';
-  populateCategorySelect(); $('wish-category').value=w.category||categories[0]||''; $('wish-form').scrollIntoView({behavior:'smooth',block:'start'});
+  $('wish-id').value=w.id;
+  $('wish-title').value=w.title||'';
+  $('wish-description').value=w.description||'';
+  $('wish-items').value=Array.isArray(w.items)?w.items.join('\n'):'';
+  $('wish-link').value=w.link||'';
+  $('wish-image').value=w.image||'';
+  $('wish-price').value=w.price||'';
+  populateCategorySelect();
+  $('wish-category').value=w.category||categories[0]||'';
+  $('wish-form').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function clearForm() { $('wish-form').reset(); $('wish-id').value=''; populateCategorySelect(); }
 function populateCategorySelect() {
@@ -83,7 +113,7 @@ function populateCategorySelect() {
 }
 function renderCategoryManager() {
   populateCategorySelect();
-  $('category-list').innerHTML=categories.map((c,i)=>'<div class="category-row"><span>'+esc(c)+'</span><button type="button" data-remove-category="'+i+'" aria-label="Ta bort '+esc(c)+'">Ta bort</button></div>').join('');
+  $('category-list').innerHTML=categories.map((category,index)=>'<div class="category-row"><span>'+esc(category)+'</span><button type="button" data-remove-category="'+index+'">Ta bort</button></div>').join('');
   $('category-list').querySelectorAll('[data-remove-category]').forEach(b=>b.onclick=()=>saveCategories(categories.filter((_,i)=>i!==Number(b.dataset.removeCategory))));
 }
 async function saveCategories(next) {
@@ -104,6 +134,7 @@ async function removeWish(id) {
   try { await adminRequest('/wishes/'+encodeURIComponent(id),'DELETE'); toast('Önskningen är borttagen.'); }
   catch(e) { showError(e.message); }
 }
+
 $('admin-open').onclick=()=>{dialog.showModal();$('admin-error').hidden=true;updateAdminUI();};
 $('login-button').onclick=async()=>{
   $('admin-error').hidden=true;
@@ -116,32 +147,49 @@ $('login-button').onclick=async()=>{
 $('logout-button').onclick=()=>{adminToken='';sessionStorage.removeItem('wollmar-admin-token');clearForm();updateAdminUI();render();};
 $('cancel-edit').onclick=clearForm;
 $('wish-form').onsubmit=async e=>{
-  e.preventDefault(); if(!isAdmin())return showError('Logga in i vuxenläget först.');
-  const data={title:$('wish-title').value.trim(),description:$('wish-description').value.trim(),items:$('wish-items').value.split('\\n').map(s=>s.trim()).filter(Boolean).filter((s,i,a)=>a.indexOf(s)===i),link:safeUrl($('wish-link').value),image:safeUrl($('wish-image').value),price:$('wish-price').value.trim(),category:$('wish-category').value};
+  e.preventDefault(); if(!isAdmin())return showError('Logga in först.');
+  const items=$('wish-items').value.split('\n').map(s=>s.trim()).filter(Boolean).filter((s,i,a)=>a.indexOf(s)===i);
+  const data={title:$('wish-title').value.trim(),description:$('wish-description').value.trim(),items,link:safeUrl($('wish-link').value),image:safeUrl($('wish-image').value),price:$('wish-price').value.trim(),category:$('wish-category').value};
   if(!data.title)return;
   try {
     const id=$('wish-id').value;
-    if(id) await adminRequest('/wishes/'+encodeURIComponent(id),'PATCH',data);
-    else await adminRequest('/wishes','POST',data);
-    clearForm(); toast('Önskningen sparad ♡');
+    if(id) {
+      const existing=wishes.find(w=>w.id===id);
+      data.reservedItems=(existing?.reservedItems||[]).filter(item=>items.includes(item));
+      await adminRequest('/wishes/'+encodeURIComponent(id),'PATCH',data);
+    } else {
+      data.reservedItems=[];
+      await adminRequest('/wishes','POST',data);
+    }
+    clearForm(); toast('Önskningen sparad.');
   } catch(err) { showError(err.message); }
 };
-$('add-category').onclick=()=>{const value=$('new-category').value.trim();if(!value)return;if(categories.some(c=>c.toLowerCase()===value.toLowerCase())){toast('Kategorin finns redan.');return;}$('new-category').value='';saveCategories([...categories,value]);};
+$('add-category').onclick=()=>{
+  const value=$('new-category').value.trim();
+  if(!value)return;
+  if(categories.some(c=>c.toLowerCase()===value.toLowerCase())){toast('Kategorin finns redan.');return;}
+  $('new-category').value=''; saveCategories([...categories,value]);
+};
+
 if(!firebaseConfigured) {
-  status.textContent='Snart öppnar önskelistan! Firebase behöver konfigureras.';
+  status.textContent='Firebase behöver konfigureras.';
   $('wish-count').textContent='Snart klart';
 } else {
   const app=initializeApp(firebaseConfig); db=getFirestore(app);
+  getDoc(doc(db,'wishes','__settings_categories__')).then(snap=>{
+    if(snap.exists()&&Array.isArray(snap.data().categories)&&snap.data().categories.length) categories=snap.data().categories;
+    populateCategorySelect(); if(isAdmin())renderCategoryManager();
+  }).catch(()=>{});
   onSnapshot(query(collection(db,'wishes'),orderBy('createdAt','asc')),snap=>{
     wishes=snap.docs.map(d=>({id:d.id,...d.data()})); render();
   },err=>{
-    status.hidden=false; status.textContent='Kunde inte ladda listan. Kontrollera att Firestore-reglerna är publicerade.';
+    status.hidden=false; status.textContent='Kunde inte ladda listan. Kontrollera Firestore-reglerna.';
     console.error('Firestore wishlist error:',err);
   });
 }
 if(!adminConfigured) {
   $('login-button').disabled=true;
   $('admin-password').disabled=true;
-  $('admin-help').textContent='Adminservern är inte inkopplad ännu. Följ stegen i projektets README.';
+  $('admin-help').textContent='Adminservern är inte inkopplad ännu.';
 }
 updateAdminUI();
