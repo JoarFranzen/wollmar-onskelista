@@ -5,8 +5,8 @@ export const firebaseConfig = {
   projectId: 'wollmar-onskelista',
   storageBucket: 'wollmar-onskelista.firebasestorage.app',
   messagingSenderId: '810529254336',
-  appId: '1:810529254336:web:5616b2585be0ee76c07625'
+  appId: '1:5616b2585be0ee76c07625'
 };
 
-// Temporarily disabled while restoring the public wishlist.
-export const adminApiUrl = 'PASTE_CLOUDFLARE_WORKER_URL_HERE';
+// Separate Cloudflare Worker that handles adult-mode login and wishlist editing.
+export const adminApiUrl = 'https://wollmar-onskelista-admin.joarfranzen.workers.dev';
