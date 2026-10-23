@@ -163,7 +163,7 @@ async function handle(request, env) {
       const result=await firestoreRequest(env,'/wishes',{method:'POST',body:JSON.stringify({fields:{...toFirestoreFields(data),createdAt:{timestampValue:data.createdAt}}})});
       return json({id:result.name.split('/').pop()},201,origin);
     }
-    const unreserveMatch=url.pathname.match(/^\\/wishes\\/([^/]+)\\/unreserve$/);
+    const unreserveMatch=url.pathname.match(/^\/wishes\/([^/]+)\/unreserve$/);
     if(unreserveMatch && request.method==='POST') {
       const id=decodeURIComponent(unreserveMatch[1]);
       if(!id || id.includes('/')) return json({error:'Ogiltigt ID.'},400,origin);
