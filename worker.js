@@ -163,6 +163,20 @@ async function handle(request, env) {
       const result=await firestoreRequest(env,'/wishes',{method:'POST',body:JSON.stringify({fields:{...toFirestoreFields(data),createdAt:{timestampValue:data.createdAt}}})});
       return json({id:result.name.split('/').pop()},201,origin);
     }
+    const unreserveMatch=url.pathname.match(/^\\/wishes\\/([^/]+)\\/unreserve$/);
+    if(unreserveMatch && request.method==='POST') {
+      const id=decodeURIComponent(unreserveMatch[1]);
+      if(!id || id.includes('/')) return json({error:'Ogiltigt ID.'},400,origin);
+      await firestoreRequest(env,'/wishes/'+encodeURIComponent(id)+'?updateMask.fieldPaths=reserved&updateMask.fieldPaths=reservedItems&updateMask.fieldPaths=reservedAt',{
+        method:'PATCH',
+        body:JSON.stringify({fields:{
+          reserved:{booleanValue:false},
+          reservedItems:{arrayValue:{values:[]}},
+          reservedAt:{nullValue:null}
+        }})
+      });
+      return json({ok:true},200,origin);
+    }
     const match=url.pathname.match(/^\/wishes\/([^/]+)$/);
     if(match && request.method==='PATCH') {
       const id=decodeURIComponent(match[1]);
