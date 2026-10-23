@@ -8,5 +8,5 @@ export const firebaseConfig = {
   appId: '1:810529254336:web:5616b2585be0ee76c07625'
 };
 
-// Deployed Cloudflare Worker used for adult/admin actions.
-export const adminApiUrl = 'https://wollmar-onskelista-admin.joarfranzen.workers.dev';
+// Temporarily disabled while restoring the public wishlist.
+export const adminApiUrl = 'PASTE_CLOUDFLARE_WORKER_URL_HERE';
