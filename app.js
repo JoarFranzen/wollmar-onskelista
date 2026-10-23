@@ -88,9 +88,23 @@ async function adminRequest(path, method='GET', body) {
 }
 
 function renderManage() {
-  $('manage-list').innerHTML=wishes.map(w=>'<div class="manage-row"><div><strong>'+esc(w.title)+'</strong><small>'+(w.items?.length?(w.items.length+' val'):(w.reserved?'Paxad':'Inte paxad'))+'</small></div><div><button data-edit="'+esc(w.id)+'">Ändra</button> <button data-delete="'+esc(w.id)+'">Ta bort</button></div></div>').join('');
+  $('manage-list').innerHTML=wishes.map(w=>{
+    const reservedCount=Array.isArray(w.reservedItems)?w.reservedItems.length:0;
+    const reservedSummary=reservedCount ? 'Paxade val: '+w.reservedItems.join(', ') : (w.reserved?'Paxad':'Inget paxat');
+    const options=Array.isArray(w.items)&&w.items.length ? '<small class="admin-options">Valbara alternativ: '+esc(w.items.join(', '))+'</small>' : '';
+    const hasReservation=!!w.reserved||reservedCount>0;
+    return '<div class="manage-row"><div><strong>'+esc(w.title)+'</strong><small>'+esc(reservedSummary)+'</small>'+options+'</div><div class="manage-actions"><button data-edit="'+esc(w.id)+'">Ändra</button> '+(hasReservation?'<button data-unreserve="'+esc(w.id)+'">Ta bort paxning</button> ':'')+'<button data-delete="'+esc(w.id)+'">Ta bort önskning</button></div></div>';
+  }).join('');
   $('manage-list').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>editWish(b.dataset.edit));
   $('manage-list').querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>removeWish(b.dataset.delete));
+  $('manage-list').querySelectorAll('[data-unreserve]').forEach(b=>b.onclick=()=>clearReservation(b.dataset.unreserve));
+}
+async function clearReservation(id) {
+  if(!confirm('Ta bort paxningen? Presenten blir tillgänglig för alla igen.')) return;
+  try {
+    await adminRequest('/wishes/'+encodeURIComponent(id)+'/unreserve','POST',{});
+    toast('Paxningen är borttagen.');
+  } catch(e) { showError(e.message); }
 }
 function editWish(id) {
   const w=wishes.find(x=>x.id===id); if(!w)return;
