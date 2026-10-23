@@ -1,0 +1,7 @@
+name = "wollmar-onskelista-admin"
+main = "worker.js"
+compatibility_date = "2026-10-23"
+
+[vars]
+FIREBASE_PROJECT_ID = "wollmar-onskelista"
+ALLOWED_ORIGIN = "https://wollmar.joaryeah.com"
