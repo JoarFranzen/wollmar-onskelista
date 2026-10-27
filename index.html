@@ -26,13 +26,28 @@
 .front .wollmar-front{width:clamp(88px,24%,130px);height:clamp(88px,24%,130px);object-fit:cover;border:6px solid #fffdf4;border-radius:50%;box-shadow:0 5px 18px #315c4033;margin:4px auto 0;position:relative;z-index:3}
 @media(max-height:720px){.front .wollmar-front{width:75px;height:75px}}
 
-/* Switch faces directly instead of rotating them in 3D. */
-.card{transform:none!important;transform-style:flat!important;transition:none!important}
-.face{backface-visibility:visible!important;-webkit-backface-visibility:visible!important}
+/* 3D flip with Safari-compatible backface handling. */
+.card{
+  transform:translateZ(0);
+  transform-style:preserve-3d;
+  -webkit-transform-style:preserve-3d;
+  transition:transform .85s cubic-bezier(.2,.72,.18,1);
+  will-change:transform;
+}
+.card.is-flipped{
+  transform:translateZ(0) rotateY(180deg);
+  -webkit-transform:translateZ(0) rotateY(180deg);
+}
+.face{
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+}
 .front{display:flex}
-.back{display:none;transform:none!important}
-.card.is-flipped .front{display:none}
-.card.is-flipped .back{display:flex}
+.back{
+  display:flex;
+  transform:rotateY(180deg);
+  -webkit-transform:rotateY(180deg);
+}
 </style>
 </head>
 <body>
