@@ -60,7 +60,13 @@
 <script>
 const card=document.getElementById('birthday-card');
 function flipCard(){const flipped=card.classList.toggle('is-flipped');card.setAttribute('aria-pressed',String(flipped));}
-card.addEventListener('click',event=>{if(event.target.closest('a'))return;flipCard();});
+card.addEventListener('click',event=>{
+  if(event.target.closest('a')) return;
+  flipCard();
+});
+document.querySelector('.wishlist-link').addEventListener('click',event=>{
+  event.stopPropagation();
+});
 card.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();flipCard();}});
 </script>
 </body>
