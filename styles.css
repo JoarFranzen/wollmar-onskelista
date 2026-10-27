@@ -161,3 +161,32 @@ footer span{color:#d7a0cb}
   opacity: 0.55;
   cursor: wait;
 }
+
+/* Links attached to individual wishlist options. */
+.item-choice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+}
+.item-choice label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+.item-choice label span { overflow-wrap: anywhere; }
+.item-choice small { white-space: nowrap; }
+.item-gift-link {
+  flex-shrink: 0;
+  color: #9b6db0;
+  background: #f8effb;
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-size: 12px;
+  text-decoration: none;
+}
+.item-gift-link:hover { background: #f0e1f7; text-decoration: underline; }
