@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 840" role="img" aria-labelledby="title desc">
+<title id="title">Wollmar fyller 4 år - inbjudan från 2025</title><desc id="desc">Ett krämvitt kalaskort med en stor grön långhalsad dinosaurie, palmer och kalasinformation.</desc>
+<defs>
+ <linearGradient id="paper" x2="0" y2="1"><stop stop-color="#f8f5e6"/><stop offset="1" stop-color="#f4efd9"/></linearGradient>
+ <linearGradient id="green" x2="0.9" y2="1"><stop stop-color="#8acb8e"/><stop offset="1" stop-color="#65ad78"/></linearGradient>
+ <filter id="soft"><feGaussianBlur stdDeviation="9"/></filter>
+</defs>
+<rect width="600" height="840" rx="34" fill="url(#paper)"/>
+<path d="M35 220 Q75 105 180 92 Q280 30 410 66 Q465 82 496 140 L520 265 Q546 360 515 492 Q485 625 360 676 Q250 716 98 665 Q42 636 35 550Z" fill="#eae7d1" opacity=".42"/>
+<g fill="#fffdf4" opacity=".95"><path d="M72 118q-3-22 20-24 8-24 29-9 18-1 22 19 21-2 22 16H72Z"/><path d="M450 165q-1-17 17-19 8-21 25-8 15 0 18 17 18-1 19 10Z"/></g>
+<!-- palms -->
+<g stroke-linecap="round">
+ <path d="M336 530V206" stroke="#d6a34a" stroke-width="8"/><path d="M336 207q-58-65-86-30 42-7 82 34-26-65-8-78 21 28 17 75 31-58 60-38-17 4-58 42 60-16 68 10-39-12-75-7" fill="#2e653d"/>
+ <path d="M190 562V335" stroke="#d6a34a" stroke-width="7"/><path d="M190 335q-51-55-74-24 39-4 71 28-20-54-5-66 20 23 14 63 26-48 51-31-17 4-48 34 49-12 56 9-31-10-62-6" fill="#2d633c"/>
+ <path d="M450 574V360" stroke="#d6a34a" stroke-width="7"/><path d="M450 360q-60-63-88-29 43-7 84 32-25-59-7-74 22 26 17 70 30-55 59-36-18 4-57 40 58-15 67 9-39-11-74-7" fill="#2d633c"/>
+</g>
+<!-- long neck and tail -->
+<path d="M91 535 C62 483 51 419 69 350 C83 294 111 246 153 201 C188 164 228 133 277 119 C319 107 354 100 390 88 L426 71 Q447 65 449 82 L461 104 Q475 119 459 128 L426 144 Q397 153 370 145 C332 136 300 146 269 165 C228 190 196 226 168 273 C143 316 128 358 132 400 C135 432 156 449 185 453 L337 455 C390 454 428 474 455 516 C484 563 473 614 438 649 C405 680 359 696 315 697 C375 674 402 641 400 603 C398 566 372 538 330 535 L175 535 C142 535 111 549 91 535Z" fill="url(#green)"/>
+<!-- body -->
+<path d="M83 515 C114 455 193 414 275 420 C358 425 419 466 440 520 C459 568 438 620 394 642 L110 642 C72 624 63 566 83 515Z" fill="url(#green)"/>
+<!-- legs -->
+<path d="M104 596h47l-3 62q-1 13-13 13h-39q-10-4-2-15Z M186 602h43l2 58q-1 13-13 13h-38q-9-5-1-15Z M337 603h43l5 56q0 14-13 14h-38q-9-4-1-15Z M397 590h40l13 67q2 13-11 15h-38q-11-3-5-16Z" fill="#72b77e"/>
+<!-- feet details -->
+<g fill="none" stroke="#477e50" stroke-width="2" stroke-linecap="round"><path d="M104 664l9-9 5 8 8-7 M194 666l9-9 6 8 8-7 M344 666l9-9 6 8 8-7 M406 665l9-9 6 8 8-7"/></g>
+<!-- face -->
+<ellipse cx="433" cy="93" rx="5" ry="7" fill="#fffdf2"/><circle cx="434" cy="94" r="3.2" fill="#294c36"/><path d="M445 120q11 6 18 0" fill="none" stroke="#3b7147" stroke-width="2" stroke-linecap="round"/>
+<!-- tiny ground plants -->
+<path d="M421 668q-9-20-2-34 14 13 12 31 9-22 24-20-3 17-20 24l-14 0" fill="#397a47"/>
+<!-- invitation copy -->
+<text x="300" y="375" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="39" fill="#fffdf2" stroke="#6eb17c" stroke-width="1.2" paint-order="stroke">Wollmar fyller 4</text>
+<text x="300" y="418" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="27" fill="#fffdf2" stroke="#6eb17c" stroke-width=".8" paint-order="stroke">Välkommen på kalas!</text>
+<path d="M165 735H252 M350 735H436" stroke="#9ec99e" stroke-width="3"/>
+<text x="207" y="758" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="18" fill="#596657">november</text>
+<text x="300" y="770" text-anchor="middle" font-family="Georgia,serif" font-size="48" fill="#43864e">30</text>
+<text x="393" y="758" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="18" fill="#596657">14.00-16.00</text>
+<text x="300" y="811" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="18" fill="#596657">Hemma hos oss på Ekeholmstorget 4</text>
+<text x="300" y="833" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="18" fill="#596657">Följ ballongerna!</text>
+</svg>
