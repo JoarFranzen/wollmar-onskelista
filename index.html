@@ -83,19 +83,13 @@ function flipCard(){
   if(flipping) return;
   flipping=true;
   card.classList.add('is-turning');
-  card.addEventListener('transitionend', function firstHalf(event){
-    if(event.target!==card || !event.propertyName.includes('transform')) return;
-    card.removeEventListener('transitionend',firstHalf);
+  window.setTimeout(()=>{
     showingBack=!showingBack;
     card.classList.toggle('show-back',showingBack);
     card.classList.remove('is-turning');
     card.setAttribute('aria-pressed',String(showingBack));
-    card.addEventListener('transitionend',function secondHalf(event2){
-      if(event2.target!==card || !event2.propertyName.includes('transform')) return;
-      card.removeEventListener('transitionend',secondHalf);
-      flipping=false;
-    });
-  });
+    window.setTimeout(()=>{flipping=false;},450);
+  },210);
 }
 card.addEventListener('click',event=>{
   if(event.target.closest('a')) return;
