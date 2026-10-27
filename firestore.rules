@@ -4,21 +4,36 @@ service cloud.firestore {
     match /wishes/{wishId} {
       // The public can view the wishlist.
       allow read: if true;
-
-      // Guests may only reserve an unreserved wish. Admin writes go through the
-      // Cloudflare Worker using a service account and therefore bypass these rules.
       allow create, delete: if false;
+
+      // Guest reservation actions. Admin writes go through the Cloudflare Worker.
       allow update: if (
+        // Reserve a whole wish that is currently free.
         resource.data.reserved == false
         && request.resource.data.reserved == true
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reserved', 'reservedAt'])
       ) || (
+        // Reserve one or more valid options, without replacing existing reservations.
         resource.data.keys().hasAll(['items'])
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reservedItems'])
         && request.resource.data.reservedItems is list
         && request.resource.data.reservedItems.toSet().hasAll(resource.data.reservedItems.toSet())
         && request.resource.data.reservedItems.toSet().difference(resource.data.reservedItems.toSet()).size() > 0
         && request.resource.data.reservedItems.toSet().difference(resource.data.reservedItems.toSet()).hasOnly(resource.data.items)
+      ) || (
+        // Undo one reserved option. The website only offers this for choices
+        // reserved in the current browser session.
+        resource.data.keys().hasAll(['items', 'reservedItems'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reservedItems'])
+        && request.resource.data.reservedItems is list
+        && resource.data.reservedItems.toSet().hasAll(request.resource.data.reservedItems.toSet())
+        && resource.data.reservedItems.toSet().difference(request.resource.data.reservedItems.toSet()).size() == 1
+      ) || (
+        // Undo a whole-wish reservation.
+        resource.data.reserved == true
+        && request.resource.data.reserved == false
+        && request.resource.data.reservedAt == null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reserved', 'reservedAt'])
       );
     }
   }
