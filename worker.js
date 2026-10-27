@@ -83,6 +83,11 @@ function toFirestoreValue(value) {
   if(typeof value==='boolean') return {booleanValue:value};
   if(typeof value==='number') return {doubleValue:value};
   if(Array.isArray(value)) return {arrayValue:{values:value.map(toFirestoreValue)}};
+  if(value && typeof value==='object') {
+    const fields={};
+    for(const [key,nested] of Object.entries(value)) fields[key]=toFirestoreValue(nested);
+    return {mapValue:{fields}};
+  }
   return {stringValue:String(value)};
 }
 function toFirestoreFields(data) {
@@ -108,6 +113,15 @@ function validateWish(body) {
   if(!data.title || data.title.length>100) throw new Error('Titeln måste vara mellan 1 och 100 tecken.');
   if(data.description.length>500) throw new Error('Beskrivningen får vara högst 500 tecken.');
   data.items=Array.isArray(body.items)?[...new Set(body.items.filter(x=>typeof x==='string').map(x=>x.trim()).filter(Boolean))].slice(0,30):[];
+  data.itemLinks={};
+  if(body.itemLinks && typeof body.itemLinks==='object' && !Array.isArray(body.itemLinks)) {
+    for(const [item,rawLink] of Object.entries(body.itemLinks)) {
+      if(!data.items.includes(item) || typeof rawLink!=='string' || !rawLink.trim()) continue;
+      let u; try {u=new URL(rawLink.trim());} catch {throw new Error('En länk till ett val är ogiltig.');}
+      if(!['http:','https:'].includes(u.protocol)) throw new Error('Länkar måste börja med http eller https.');
+      data.itemLinks[item]=u.href;
+    }
+  }
   data.reservedItems=Array.isArray(body.reservedItems)?[...new Set(body.reservedItems.filter(x=>typeof x==='string').map(x=>x.trim()).filter(Boolean))].slice(0,30):[];
   if(data.items.some(x=>x.length>100)) throw new Error('Varje val får vara högst 100 tecken.');
   if(data.items.length>30) throw new Error('Max 30 val per önskning.');
