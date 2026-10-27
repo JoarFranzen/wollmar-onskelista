@@ -1,38 +1,48 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 840" role="img" aria-labelledby="title desc">
-<title id="title">Wollmar fyller 4 år - inbjudan från 2025</title><desc id="desc">Ett krämvitt kalaskort med en stor grön långhalsad dinosaurie, palmer och kalasinformation.</desc>
+<title id="title">Wollmar fyller 5 - Zorroinspirerad kalasinbjudan</title>
+<desc id="desc">En egenritad tecknad maskerad svärdsman med svart hatt och mask, röd mantel och blå bakgrund med dekorativa svärdsspår.</desc>
 <defs>
- <linearGradient id="paper" x2="0" y2="1"><stop stop-color="#f8f5e6"/><stop offset="1" stop-color="#f4efd9"/></linearGradient>
- <linearGradient id="green" x2="0.9" y2="1"><stop stop-color="#8acb8e"/><stop offset="1" stop-color="#65ad78"/></linearGradient>
- <filter id="soft"><feGaussianBlur stdDeviation="9"/></filter>
+ <linearGradient id="night" x2="0.9" y2="1"><stop stop-color="#10264d"/><stop offset="1" stop-color="#1769a8"/></linearGradient>
+ <linearGradient id="cape" x2="1" y2="1"><stop stop-color="#ed2739"/><stop offset="1" stop-color="#9f1028"/></linearGradient>
+ <linearGradient id="steel" x2="1" y2="1"><stop stop-color="#fff"/><stop offset=".5" stop-color="#9dc9ed"/><stop offset="1" stop-color="#fff"/></linearGradient>
+ <pattern id="web" width="74" height="74" patternUnits="userSpaceOnUse"><path d="M0 0L74 74M74 0L0 74M37 0V74M0 37H74" stroke="#ffffff" stroke-opacity=".07" stroke-width="1.5"/></pattern>
+ <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="9" stdDeviation="7" flood-color="#07152d" flood-opacity=".4"/></filter>
 </defs>
-<rect width="600" height="840" rx="34" fill="url(#paper)"/>
-<path d="M35 220 Q75 105 180 92 Q280 30 410 66 Q465 82 496 140 L520 265 Q546 360 515 492 Q485 625 360 676 Q250 716 98 665 Q42 636 35 550Z" fill="#eae7d1" opacity=".42"/>
-<g fill="#fffdf4" opacity=".95"><path d="M72 118q-3-22 20-24 8-24 29-9 18-1 22 19 21-2 22 16H72Z"/><path d="M450 165q-1-17 17-19 8-21 25-8 15 0 18 17 18-1 19 10Z"/></g>
-<!-- palms -->
-<g stroke-linecap="round">
- <path d="M336 530V206" stroke="#d6a34a" stroke-width="8"/><path d="M336 207q-58-65-86-30 42-7 82 34-26-65-8-78 21 28 17 75 31-58 60-38-17 4-58 42 60-16 68 10-39-12-75-7" fill="#2e653d"/>
- <path d="M190 562V335" stroke="#d6a34a" stroke-width="7"/><path d="M190 335q-51-55-74-24 39-4 71 28-20-54-5-66 20 23 14 63 26-48 51-31-17 4-48 34 49-12 56 9-31-10-62-6" fill="#2d633c"/>
- <path d="M450 574V360" stroke="#d6a34a" stroke-width="7"/><path d="M450 360q-60-63-88-29 43-7 84 32-25-59-7-74 22 26 17 70 30-55 59-36-18 4-57 40 58-15 67 9-39-11-74-7" fill="#2d633c"/>
+<rect width="600" height="840" rx="30" fill="url(#night)"/><rect width="600" height="840" rx="30" fill="url(#web)"/>
+<circle cx="300" cy="330" r="220" fill="#e8273e" opacity=".12"/><path d="M-20 255L620 90M-20 280L620 115M-20 305L620 140" stroke="#e93a4c" stroke-width="3" opacity=".32"/>
+<g fill="#fff"><path d="M77 110l5 16 16 5-16 5-5 16-5-16-16-5 16-5Z"/><path d="M510 205l4 12 12 4-12 4-4 12-4-12-12-4 12-4Z"/><circle cx="120" cy="235" r="4"/><circle cx="478" cy="110" r="4"/><circle cx="450" cy="445" r="3"/></g>
+<!-- cape -->
+<g filter="url(#shadow)"><path d="M222 330Q165 390 135 515L90 675Q190 650 268 715L371 680Q442 598 445 481L384 349Z" fill="url(#cape)" stroke="#7d1424" stroke-width="5"/><path d="M224 365Q200 490 166 610L248 654Q285 526 303 390" fill="none" stroke="#ff6470" stroke-width="7" opacity=".65"/>
+<!-- body and tunic -->
+<path d="M235 330L367 328Q403 398 386 505L215 505Q205 413 235 330Z" fill="#101521" stroke="#050a12" stroke-width="5"/>
+<path d="M244 354L355 354L340 480L260 480Z" fill="#182e50"/><path d="M225 476Q302 495 392 473L399 515Q303 542 214 515Z" fill="#070b14"/>
+<!-- neck and face -->
+<path d="M260 277L347 276L352 340Q307 370 255 339Z" fill="#c98056" stroke="#643c32" stroke-width="4"/>
+<path d="M222 194Q225 120 303 116Q386 119 385 202L371 267Q351 310 304 316Q256 309 237 267Z" fill="#d99569" stroke="#512e2b" stroke-width="5"/>
+<!-- hair -->
+<path d="M222 218Q198 153 240 121Q277 83 331 109Q388 119 390 185L373 219L357 176Q308 152 265 176L245 225Z" fill="#17151a"/>
+<!-- mask -->
+<path d="M227 205Q265 180 303 205Q345 179 382 204L369 241Q337 249 303 229Q268 250 239 239Z" fill="#090b11" stroke="#05060a" stroke-width="4"/>
+<path d="M245 215Q267 207 287 218M319 218Q341 207 364 215" fill="none" stroke="#f6f5ef" stroke-width="4" stroke-linecap="round"/>
+<!-- eyebrows and smile -->
+<path d="M254 197l31 5M321 202l32-5" stroke="#17151a" stroke-width="7" stroke-linecap="round"/>
+<path d="M276 270Q303 284 330 268" fill="none" stroke="#723a34" stroke-width="4" stroke-linecap="round"/>
+<!-- hat -->
+<path d="M204 170Q222 93 298 77Q375 89 395 170Q305 151 204 170Z" fill="#080b12" stroke="#03050a" stroke-width="5"/>
+<path d="M186 170Q300 144 413 170Q420 184 400 190Q296 171 199 192Q177 187 186 170Z" fill="#11131b" stroke="#03050a" stroke-width="4"/>
+<path d="M246 130Q300 111 351 131" fill="none" stroke="#303746" stroke-width="5" stroke-linecap="round"/>
+<!-- belt buckle -->
+<rect x="286" y="484" width="36" height="28" rx="5" fill="#d8b36a" stroke="#fff0b8" stroke-width="3"/><path d="M295 490l18 16m0-16l-18 16" stroke="#5b4023" stroke-width="3"/>
 </g>
-<!-- long neck and tail -->
-<path d="M91 535 C62 483 51 419 69 350 C83 294 111 246 153 201 C188 164 228 133 277 119 C319 107 354 100 390 88 L426 71 Q447 65 449 82 L461 104 Q475 119 459 128 L426 144 Q397 153 370 145 C332 136 300 146 269 165 C228 190 196 226 168 273 C143 316 128 358 132 400 C135 432 156 449 185 453 L337 455 C390 454 428 474 455 516 C484 563 473 614 438 649 C405 680 359 696 315 697 C375 674 402 641 400 603 C398 566 372 538 330 535 L175 535 C142 535 111 549 91 535Z" fill="url(#green)"/>
-<!-- body -->
-<path d="M83 515 C114 455 193 414 275 420 C358 425 419 466 440 520 C459 568 438 620 394 642 L110 642 C72 624 63 566 83 515Z" fill="url(#green)"/>
-<!-- legs -->
-<path d="M104 596h47l-3 62q-1 13-13 13h-39q-10-4-2-15Z M186 602h43l2 58q-1 13-13 13h-38q-9-5-1-15Z M337 603h43l5 56q0 14-13 14h-38q-9-4-1-15Z M397 590h40l13 67q2 13-11 15h-38q-11-3-5-16Z" fill="#72b77e"/>
-<!-- feet details -->
-<g fill="none" stroke="#477e50" stroke-width="2" stroke-linecap="round"><path d="M104 664l9-9 5 8 8-7 M194 666l9-9 6 8 8-7 M344 666l9-9 6 8 8-7 M406 665l9-9 6 8 8-7"/></g>
-<!-- face -->
-<ellipse cx="433" cy="93" rx="5" ry="7" fill="#fffdf2"/><circle cx="434" cy="94" r="3.2" fill="#294c36"/><path d="M445 120q11 6 18 0" fill="none" stroke="#3b7147" stroke-width="2" stroke-linecap="round"/>
-<!-- tiny ground plants -->
-<path d="M421 668q-9-20-2-34 14 13 12 31 9-22 24-20-3 17-20 24l-14 0" fill="#397a47"/>
-<!-- invitation copy -->
-<text x="300" y="375" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="39" fill="#fffdf2" stroke="#6eb17c" stroke-width="1.2" paint-order="stroke">Wollmar fyller 4</text>
-<text x="300" y="418" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="27" fill="#fffdf2" stroke="#6eb17c" stroke-width=".8" paint-order="stroke">Välkommen på kalas!</text>
-<path d="M165 735H252 M350 735H436" stroke="#9ec99e" stroke-width="3"/>
-<text x="207" y="758" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="18" fill="#596657">november</text>
-<text x="300" y="770" text-anchor="middle" font-family="Georgia,serif" font-size="48" fill="#43864e">30</text>
-<text x="393" y="758" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="18" fill="#596657">14.00-16.00</text>
-<text x="300" y="811" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="18" fill="#596657">Hemma hos oss på Ekeholmstorget 4</text>
-<text x="300" y="833" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="18" fill="#596657">Följ ballongerna!</text>
+<!-- raised arm and sword -->
+<path d="M361 361Q408 341 424 296L450 263" fill="none" stroke="#d99569" stroke-width="28" stroke-linecap="round"/><path d="M433 282L464 239" stroke="#11131b" stroke-width="16" stroke-linecap="round"/><path d="M455 245L501 100Q509 81 515 98L479 256Z" fill="url(#steel)" stroke="#e6f3ff" stroke-width="3"/><path d="M441 259L477 277" stroke="#e8c16f" stroke-width="10" stroke-linecap="round"/><path d="M444 251L480 270" stroke="#4b2d1d" stroke-width="4" stroke-linecap="round"/>
+<!-- flourish -->
+<path d="M55 390Q90 340 124 390T190 390" fill="none" stroke="#fff" stroke-width="3" opacity=".4"/><path d="M415 560Q455 520 495 560T575 560" fill="none" stroke="#fff" stroke-width="3" opacity=".35"/>
+<!-- text panel -->
+<path d="M36 625Q300 590 564 625L564 805Q300 832 36 805Z" fill="#f8f2e5" stroke="#fff" stroke-width="3"/>
+<text x="300" y="674" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="700" letter-spacing="5" fill="#17416b">¡ATENCIÓN!</text>
+<text x="300" y="723" text-anchor="middle" font-family="Georgia,serif" font-size="42" font-weight="700" fill="#111827">Wollmar fyller 5</text>
+<text x="300" y="757" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="21" font-weight="700" fill="#c51e35">Välkommen på kalas!</text>
+<path d="M110 777H490" stroke="#1b4f80" stroke-width="2" opacity=".6"/>
+<text x="300" y="799" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="15" fill="#243247">30 november · 14.00-16.00 · Ekeholmstorget 4</text>
 </svg>
