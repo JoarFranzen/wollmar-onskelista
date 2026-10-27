@@ -26,26 +26,21 @@
 .front .wollmar-front{width:clamp(88px,24%,130px);height:clamp(88px,24%,130px);object-fit:cover;border:6px solid #fffdf4;border-radius:50%;box-shadow:0 5px 18px #315c4033;margin:4px auto 0;position:relative;z-index:3}
 @media(max-height:720px){.front .wollmar-front{width:75px;height:75px}}
 
-/* 3D flip: animate the card, switch the visible face halfway through. */
+/* Two-phase 3D flip: swap content edge-on, avoiding Safari backface bugs. */
 .card{
   transform:rotateY(0deg);
-  transform-style:flat;
-  -webkit-transform-style:flat;
-  transition:transform .85s cubic-bezier(.2,.72,.18,1);
+  transform-style:preserve-3d;
+  -webkit-transform-style:preserve-3d;
+  transition:transform .42s cubic-bezier(.2,.72,.18,1);
   will-change:transform;
 }
-.card.is-flipped{
-  transform:rotateY(180deg);
-  -webkit-transform:rotateY(180deg);
-}
-.face{
-  backface-visibility:visible!important;
-  -webkit-backface-visibility:visible!important;
-}
+.card.is-turning{transform:rotateY(90deg);-webkit-transform:rotateY(90deg)}
+.card.is-flipped{transform:rotateY(180deg);-webkit-transform:rotateY(180deg)}
+.face{backface-visibility:hidden;-webkit-backface-visibility:hidden}
 .front{display:flex}
-.back{display:none;transform:rotateY(180deg)!important;-webkit-transform:rotateY(180deg)!important}
-.card.is-flipped .front{display:none}
-.card.is-flipped .back{display:flex}
+.back{display:none;transform:rotateY(180deg);-webkit-transform:rotateY(180deg)}
+.card.show-back .front{display:none}
+.card.show-back .back{display:flex}
 </style>
 </head>
 <body>
@@ -80,18 +75,36 @@
 </main>
 <script>
 const card=document.getElementById('birthday-card');
+let showingBack=false;
+let flipping=false;
 function flipCard(){
-  const flipped=card.classList.toggle('is-flipped');
-  card.setAttribute('aria-pressed',String(flipped));
+  if(flipping) return;
+  flipping=true;
+  card.classList.add('is-turning');
+  card.classList.remove('is-flipped');
+  card.addEventListener('transitionend', function firstHalf(event){
+    if(event.propertyName!=='transform') return;
+    card.removeEventListener('transitionend',firstHalf);
+    showingBack=!showingBack;
+    card.classList.toggle('show-back',showingBack);
+    card.classList.remove('is-turning');
+    if(showingBack) card.classList.add('is-flipped');
+    card.setAttribute('aria-pressed',String(showingBack));
+    card.addEventListener('transitionend',function secondHalf(event2){
+      if(event2.propertyName!=='transform') return;
+      card.removeEventListener('transitionend',secondHalf);
+      flipping=false;
+    });
+  });
 }
 card.addEventListener('click',event=>{
   if(event.target.closest('a')) return;
   flipCard();
 });
-document.querySelector('.wishlist-link').addEventListener('click',event=>{
-  event.stopPropagation();
+document.querySelector('.wishlist-link').addEventListener('click',event=>event.stopPropagation());
+card.addEventListener('keydown',event=>{
+  if(event.key==='Enter'||event.key===' '){event.preventDefault();flipCard();}
 });
-card.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();flipCard();}});
 </script>
 </body>
 </html>
