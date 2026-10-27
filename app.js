@@ -27,21 +27,81 @@ function render() {
     if(items.length) {
       choices='<div class="item-picks">'+items.map(item=>{
         const taken=reservedItems.includes(item);
-        return '<label class="item-choice'+(taken?' item-taken':'')+'"><input type="checkbox" value="'+esc(item)+'" '+(taken?'disabled':'')+'><span>'+esc(item)+'</span>'+(taken?'<small>Paxad</small>':'')+'</label>';
+        const mine=isOwnItemReservation(w.id,item);
+        return '<label class="item-choice'+(taken?' item-taken':'')+'"><input type="checkbox" value="'+esc(item)+'" '+(taken?'disabled':'')+'><span>'+esc(item)+'</span>'+(taken?(mine?'<small>Paxad av dig · <button type="button" class="undo-reservation" data-undo-item="'+esc(w.id)+'" data-item="'+esc(item)+'">Ångra</button></small>':'<small>Paxad</small>'):'')+'</label>';
       }).join('')+'<button class="reserve-button" data-reserve-items="'+esc(w.id)+'" '+(items.every(item=>reservedItems.includes(item))?'disabled':'')+'>Paxa valda</button></div>';
     } else {
       const taken=!!w.reserved || reservedItems.length>0;
-      choices=taken?'<span class="reserved-label">Paxad</span>':'<button class="reserve-button" data-reserve="'+esc(w.id)+'">Paxa presenten</button>';
+      choices=taken?(isOwnWholeReservation(w.id)?'<span class="reserved-label">Paxad av dig</span> <button type="button" class="undo-reservation" data-undo-whole="'+esc(w.id)+'">Ångra paxning</button>':'<span class="reserved-label">Paxad</span>'):'<button class="reserve-button" data-reserve="'+esc(w.id)+'">Paxa presenten</button>';
     }
     return '<article class="wish-card"><div class="wish-image">'+picture+'</div><div class="wish-content"><span class="category">'+esc(w.category||'Övrigt')+'</span><h3>'+esc(w.title)+'</h3>'+(w.description?'<p class="wish-description">'+esc(w.description)+'</p>':'')+(w.price?'<div class="price">'+esc(w.price)+'</div>':'')+(link?'<a class="gift-link" href="'+esc(link)+'" target="_blank" rel="noopener noreferrer">Länk till present</a>':'')+choices+'</div></article>';
   }).join('');
   grid.querySelectorAll('[data-reserve]').forEach(b=>b.addEventListener('click',()=>reserve(b.dataset.reserve,b)));
+  grid.querySelectorAll('[data-undo-item]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();unreserveItem(b.dataset.undoItem,b.dataset.item,b);}));
+  grid.querySelectorAll('[data-undo-whole]').forEach(b=>b.addEventListener('click',()=>unreserveWhole(b.dataset.undoWhole,b)));
   grid.querySelectorAll('[data-reserve-items]').forEach(b=>b.addEventListener('click',()=>{
     const card=b.closest('.wish-card');
     const selected=[...card.querySelectorAll('.item-choice input:checked:not(:disabled)')].map(input=>input.value);
     reserveItems(b.dataset.reserveItems,selected,b);
   }));
   if(isAdmin()) renderManage();
+}
+
+const SESSION_RESERVATIONS_KEY = 'wollmar-session-reservations-v1';
+function getSessionReservations() {
+  try { return JSON.parse(sessionStorage.getItem(SESSION_RESERVATIONS_KEY)||'{}'); }
+  catch { return {}; }
+}
+function saveSessionReservations(value) { sessionStorage.setItem(SESSION_RESERVATIONS_KEY,JSON.stringify(value)); }
+function isOwnItemReservation(id,item) { return (getSessionReservations()[id]?.items||[]).includes(item); }
+function isOwnWholeReservation(id) { return !!getSessionReservations()[id]?.whole; }
+function rememberReservation(id,kind,value) {
+  const all=getSessionReservations();
+  if(!all[id])all[id]={items:[],whole:false};
+  if(kind==='item'&&!all[id].items.includes(value))all[id].items.push(value);
+  if(kind==='whole')all[id].whole=true;
+  saveSessionReservations(all);
+}
+function forgetReservation(id,kind,value) {
+  const all=getSessionReservations();
+  if(!all[id])return;
+  if(kind==='item')all[id].items=(all[id].items||[]).filter(x=>x!==value);
+  if(kind==='whole')all[id].whole=false;
+  if(!all[id].whole&&!all[id].items.length)delete all[id];
+  saveSessionReservations(all);
+}
+
+async function unreserveItem(id,item,button) {
+  button.disabled=true;
+  try {
+    await runTransaction(db,async tx=>{
+      const ref=doc(db,'wishes',id),snap=await tx.get(ref);
+      if(!snap.exists())throw Error('gone');
+      const current=Array.isArray(snap.data().reservedItems)?snap.data().reservedItems:[];
+      if(!current.includes(item))throw Error('already');
+      tx.update(ref,{reservedItems:current.filter(x=>x!==item)});
+    });
+    forgetReservation(id,'item',item);
+    toast('Paxningen är ångrad.');
+  } catch(e) {
+    toast('Kunde inte ångra paxningen. Prova igen.');
+  } finally { button.disabled=false; }
+}
+async function unreserveWhole(id,button) {
+  if(!confirm('Vill du ångra paxningen av hela presenten?'))return;
+  button.disabled=true;
+  try {
+    await runTransaction(db,async tx=>{
+      const ref=doc(db,'wishes',id),snap=await tx.get(ref);
+      if(!snap.exists())throw Error('gone');
+      if(!snap.data().reserved)throw Error('already');
+      tx.update(ref,{reserved:false,reservedAt:null});
+    });
+    forgetReservation(id,'whole');
+    toast('Paxningen är ångrad.');
+  } catch(e) {
+    toast('Kunde inte ångra paxningen. Prova igen.');
+  } finally { button.disabled=false; }
 }
 
 async function reserveItems(id, selected, button) {
@@ -55,6 +115,7 @@ async function reserveItems(id, selected, button) {
       if(selected.some(item=>!items.includes(item)||reserved.includes(item))) throw Error('reserved');
       tx.update(ref,{reservedItems:[...reserved,...selected]});
     });
+    selected.forEach(item=>rememberReservation(id,'item',item));
     toast('Valet är paxat.');
   } catch(e) {
     toast(e.message==='reserved'?'Någon hann före. Uppdatera listan och välj igen.':'Det gick inte att paxa just nu. Prova igen.');
@@ -70,6 +131,7 @@ async function reserve(id, button) {
       if(snap.data().reserved) throw Error('reserved');
       tx.update(ref,{reserved:true,reservedAt:serverTimestamp()});
     });
+    rememberReservation(id,'whole');
     toast('Presenten är paxad.');
   } catch(e) {
     toast(e.message==='reserved'?'Någon hann före, presenten är redan paxad.':'Det gick inte att paxa just nu. Prova igen.');
