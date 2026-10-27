@@ -142,3 +142,22 @@ footer span{color:#d7a0cb}
 .manage-actions{display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end}
 .manage-row button[data-unreserve]{color:#a24e77;font-weight:700}
 @media(max-width:600px){.manage-actions{justify-content:flex-start;width:100%}}
+
+/* Guest undo controls for reservations made in this browser tab. */
+.undo-reservation {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.3rem;
+  padding: 0.15rem 0.45rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.82em;
+  cursor: pointer;
+}
+.undo-reservation:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
