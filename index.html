@@ -26,28 +26,26 @@
 .front .wollmar-front{width:clamp(88px,24%,130px);height:clamp(88px,24%,130px);object-fit:cover;border:6px solid #fffdf4;border-radius:50%;box-shadow:0 5px 18px #315c4033;margin:4px auto 0;position:relative;z-index:3}
 @media(max-height:720px){.front .wollmar-front{width:75px;height:75px}}
 
-/* 3D flip with Safari-compatible backface handling. */
+/* 3D flip: animate the card, switch the visible face halfway through. */
 .card{
-  transform:translateZ(0);
-  transform-style:preserve-3d;
-  -webkit-transform-style:preserve-3d;
+  transform:rotateY(0deg);
+  transform-style:flat;
+  -webkit-transform-style:flat;
   transition:transform .85s cubic-bezier(.2,.72,.18,1);
   will-change:transform;
 }
 .card.is-flipped{
-  transform:translateZ(0) rotateY(180deg);
-  -webkit-transform:translateZ(0) rotateY(180deg);
-}
-.face{
-  backface-visibility:hidden;
-  -webkit-backface-visibility:hidden;
-}
-.front{display:flex}
-.back{
-  display:flex;
   transform:rotateY(180deg);
   -webkit-transform:rotateY(180deg);
 }
+.face{
+  backface-visibility:visible!important;
+  -webkit-backface-visibility:visible!important;
+}
+.front{display:flex}
+.back{display:none;transform:none!important;-webkit-transform:none!important}
+.card.is-flipped .front{display:none}
+.card.is-flipped .back{display:flex}
 </style>
 </head>
 <body>
@@ -82,7 +80,10 @@
 </main>
 <script>
 const card=document.getElementById('birthday-card');
-function flipCard(){const flipped=card.classList.toggle('is-flipped');card.setAttribute('aria-pressed',String(flipped));}
+function flipCard(){
+  const flipped=card.classList.toggle('is-flipped');
+  card.setAttribute('aria-pressed',String(flipped));
+}
 card.addEventListener('click',event=>{
   if(event.target.closest('a')) return;
   flipCard();
