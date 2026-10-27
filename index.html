@@ -26,23 +26,13 @@
 .front .wollmar-front{width:clamp(88px,24%,130px);height:clamp(88px,24%,130px);object-fit:cover;border:6px solid #fffdf4;border-radius:50%;box-shadow:0 5px 18px #315c4033;margin:4px auto 0;position:relative;z-index:3}
 @media(max-height:720px){.front .wollmar-front{width:75px;height:75px}}
 
-/* Safari-safe 3D flip: turn edge-on, switch faces, then turn back to face the viewer. */
-.card{
-  transform:rotateY(0deg);
-  -webkit-transform:rotateY(0deg);
-  transform-style:preserve-3d;
-  -webkit-transform-style:preserve-3d;
-  transition:transform .42s cubic-bezier(.2,.72,.18,1),-webkit-transform .42s cubic-bezier(.2,.72,.18,1);
-  filter:none;
-  box-shadow:0 22px 32px #534a3030;
-  will-change:transform;
-}
-.card.is-turning{transform:rotateY(90deg);-webkit-transform:rotateY(90deg)}
-.face{backface-visibility:visible!important;-webkit-backface-visibility:visible!important}
+/* True 3D flip. No filter on the rotating element: filters flatten preserve-3d. */
+.stage{perspective:1800px;-webkit-perspective:1800px}
+.card{transform:rotateY(0deg);-webkit-transform:rotateY(0deg);transform-style:preserve-3d;-webkit-transform-style:preserve-3d;transition:transform .85s cubic-bezier(.2,.72,.18,1);box-shadow:0 22px 32px #534a3030;will-change:transform}
+.card.is-flipped{transform:rotateY(180deg);-webkit-transform:rotateY(180deg)}
+.face{backface-visibility:hidden!important;-webkit-backface-visibility:hidden!important}
 .front{display:flex}
-.back{display:none;transform:none!important;-webkit-transform:none!important}
-.card.show-back .front{display:none}
-.card.show-back .back{display:flex}
+.back{display:flex;transform:rotateY(180deg)!important;-webkit-transform:rotateY(180deg)!important}
 </style>
 </head>
 <body>
@@ -77,28 +67,10 @@
 </main>
 <script>
 const card=document.getElementById('birthday-card');
-let showingBack=false;
-let flipping=false;
-function flipCard(){
-  if(flipping) return;
-  flipping=true;
-  card.classList.add('is-turning');
-  window.setTimeout(()=>{
-    showingBack=!showingBack;
-    card.classList.toggle('show-back',showingBack);
-    card.classList.remove('is-turning');
-    card.setAttribute('aria-pressed',String(showingBack));
-    window.setTimeout(()=>{flipping=false;},450);
-  },210);
-}
-card.addEventListener('click',event=>{
-  if(event.target.closest('a')) return;
-  flipCard();
-});
+function flipCard(){const flipped=card.classList.toggle('is-flipped');card.setAttribute('aria-pressed',String(flipped));}
+card.addEventListener('click',event=>{if(event.target.closest('a'))return;flipCard();});
 document.querySelector('.wishlist-link').addEventListener('click',event=>event.stopPropagation());
-card.addEventListener('keydown',event=>{
-  if(event.key==='Enter'||event.key===' '){event.preventDefault();flipCard();}
-});
+card.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();flipCard();}});
 </script>
 </body>
 </html>
