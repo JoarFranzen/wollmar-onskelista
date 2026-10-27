@@ -25,6 +25,14 @@
 .wishlist-link{background:#315c40!important;color:#fffdf2!important;border:2px solid #f8f3df!important;box-shadow:0 4px 0 #244832!important}
 .front .wollmar-front{width:clamp(88px,24%,130px);height:clamp(88px,24%,130px);object-fit:cover;border:6px solid #fffdf4;border-radius:50%;box-shadow:0 5px 18px #315c4033;margin:4px auto 0;position:relative;z-index:3}
 @media(max-height:720px){.front .wollmar-front{width:75px;height:75px}}
+
+/* Switch faces directly instead of rotating them in 3D. */
+.card{transform:none!important;transform-style:flat!important;transition:none!important}
+.face{backface-visibility:visible!important;-webkit-backface-visibility:visible!important}
+.front{display:flex}
+.back{display:none;transform:none!important}
+.card.is-flipped .front{display:none}
+.card.is-flipped .back{display:flex}
 </style>
 </head>
 <body>
