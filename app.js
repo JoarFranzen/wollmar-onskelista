@@ -25,10 +25,12 @@ function render() {
     const picture=img?'<img src="'+esc(img)+'" alt="" loading="lazy" onerror="this.remove()">':'';
     let choices='';
     if(items.length) {
+      const itemLinks=w.itemLinks&&typeof w.itemLinks==='object'?w.itemLinks:{};
       choices='<div class="item-picks">'+items.map(item=>{
         const taken=reservedItems.includes(item);
         const mine=isOwnItemReservation(w.id,item);
-        return '<label class="item-choice'+(taken?' item-taken':'')+'"><input type="checkbox" value="'+esc(item)+'" '+(taken?'disabled':'')+'><span>'+esc(item)+'</span>'+(taken?(mine?'<small>Paxad av dig · <button type="button" class="undo-reservation" data-undo-item="'+esc(w.id)+'" data-item="'+esc(item)+'">Ångra</button></small>':'<small>Paxad</small>'):'')+'</label>';
+        const itemLink=safeUrl(itemLinks[item]);
+        return '<div class="item-choice'+(taken?' item-taken':'')+'"><label><input type="checkbox" value="'+esc(item)+'" '+(taken?'disabled':'')+'><span>'+esc(item)+'</span></label>'+(itemLink?'<a class="item-gift-link" href="'+esc(itemLink)+'" target="_blank" rel="noopener noreferrer">Se länk</a>':'')+(taken?(mine?'<small>Paxad av dig · <button type="button" class="undo-reservation" data-undo-item="'+esc(w.id)+'" data-item="'+esc(item)+'">Ångra</button></small>':'<small>Paxad</small>'):'')+'</div>';
       }).join('')+'<button class="reserve-button" data-reserve-items="'+esc(w.id)+'" '+(items.every(item=>reservedItems.includes(item))?'disabled':'')+'>Paxa valda</button></div>';
     } else {
       const taken=!!w.reserved || reservedItems.length>0;
@@ -173,7 +175,8 @@ function editWish(id) {
   $('wish-id').value=w.id;
   $('wish-title').value=w.title||'';
   $('wish-description').value=w.description||'';
-  $('wish-items').value=Array.isArray(w.items)?w.items.join('\n'):'';
+  const itemLinks=w.itemLinks&&typeof w.itemLinks==='object'?w.itemLinks:{};
+  $('wish-items').value=Array.isArray(w.items)?w.items.map(item=>item+(safeUrl(itemLinks[item])?' | '+safeUrl(itemLinks[item]):'')).join('\n'):'';
   $('wish-link').value=w.link||'';
   $('wish-image').value=w.image||'';
   $('wish-price').value=w.price||'';
@@ -224,8 +227,21 @@ $('logout-button').onclick=()=>{adminToken='';sessionStorage.removeItem('wollmar
 $('cancel-edit').onclick=clearForm;
 $('wish-form').onsubmit=async e=>{
   e.preventDefault(); if(!isAdmin())return showError('Logga in först.');
-  const items=$('wish-items').value.split('\n').map(s=>s.trim()).filter(Boolean).filter((s,i,a)=>a.indexOf(s)===i);
-  const data={title:$('wish-title').value.trim(),description:$('wish-description').value.trim(),items,link:safeUrl($('wish-link').value),image:safeUrl($('wish-image').value),price:$('wish-price').value.trim(),category:$('wish-category').value};
+  const itemLines=$('wish-items').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const items=[],itemLinks={};
+  for(const line of itemLines) {
+    const separator=line.indexOf('|');
+    const name=(separator<0?line:line.slice(0,separator)).trim();
+    const rawLink=separator<0?'':line.slice(separator+1).trim();
+    if(!name)continue;
+    if(!items.includes(name))items.push(name);
+    if(rawLink) {
+      const parsedLink=safeUrl(rawLink);
+      if(!parsedLink){showError('En länk till ett val är ogiltig. Använd en fullständig https://- eller http://-adress.');return;}
+      itemLinks[name]=parsedLink;
+    }
+  }
+  const data={title:$('wish-title').value.trim(),description:$('wish-description').value.trim(),items,itemLinks,link:safeUrl($('wish-link').value),image:safeUrl($('wish-image').value),price:$('wish-price').value.trim(),category:$('wish-category').value};
   if(!data.title)return;
   try {
     const id=$('wish-id').value;
